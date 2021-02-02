@@ -87,8 +87,9 @@ def main():
     parser.add_argument("--server_config_file", help="relative path to Apache config file (default: SERVER_CONFIG_FILE=conf/httd.conf)", default="conf/httpd.conf", type=str)
     args = parser.parse_args()
 
-    read_config(args.config_dir, args.server_config_file)
+    lines = read_config(args.config_dir, args.server_config_file)
 
+    print('\n'.join(lines))
 
 
 
