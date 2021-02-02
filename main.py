@@ -29,6 +29,7 @@ from glob import iglob
 INCLUDE = "INCLUDE"
 
 class Directive:
+    instances = 0
     source_file = ""
     directive = ""
     directive_args = []
@@ -47,14 +48,12 @@ def read_config(config_dir, server_config_file):
 
     config_lines = []
 
-    print(f"Config string: {config}")
-
     for fpath in iglob(config):
-        print(f"Config file: {fpath}")
+        config_lines.append(f"# INCLUDED FROM: {fpath}\n")
         try:
             with open(fpath, 'r') as f:
                 for line in f.readlines():
-                    line_stripped = line.strip()
+                    line_stripped = line.strip().rstrip('\n')
                     if line_stripped.startswith('#') or len(line_stripped) == 0:
                         # Ignore lines that start with a #, like this one :|  Also empty lines. Why are you still reading this?
                         continue
@@ -62,9 +61,9 @@ def read_config(config_dir, server_config_file):
                         line_ucase = line_stripped.upper()
                         if line_ucase.startswith(INCLUDE):
                             (directive, args) = line.split(None, 1)
-                            args_noquotes = args.strip('"\'')
+                            args_noquotes = args.strip('"\'\r\n')
                             config_path = args_noquotes
-                            config_lines.append(read_config(config_dir, config_path))
+                            config_lines.extend(read_config(config_dir, config_path))
                         else:
                             config_lines.append(line)
 
@@ -92,7 +91,7 @@ def main():
 
     lines = read_config(args.config_dir, args.server_config_file)
 
-    print(lines)
+    print(''.join(lines))
 
 
 
