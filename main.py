@@ -47,7 +47,10 @@ def read_config(config_dir, server_config_file):
 
     config_lines = []
 
+    print(f"Config string: {config}")
+
     for fpath in iglob(config):
+        print(f"Config file: {fpath}")
         try:
             with open(fpath, 'r') as f:
                 for line in f.readlines():
@@ -89,7 +92,7 @@ def main():
 
     lines = read_config(args.config_dir, args.server_config_file)
 
-    print('\n'.join(lines))
+    print(lines)
 
 
 
