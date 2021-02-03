@@ -4,28 +4,6 @@ import argparse
 from os import path
 from glob import iglob
 
-#from enum import Enum
-
-# class DirectiveType(Enum):
-#     SERVERROOT = auto()
-#     LISTEN = auto()
-#     LOADMODULE = auto()
-#     USER = auto()
-#     GROUP = auto()
-#     SERVERADMIN = auto()
-#     SERVERNAME = auto()
-#     DIRECTORY = auto()
-#     DOCUMENTROOT = auto()
-#     IFMODULE = auto()
-#     FILES = auto()
-#     ERRORLOG = auto()
-#     LOGLEVEL = auto()
-#     ADDDEFAULTCHARSET = auto()
-
-# class DirectiveSubType(Enum):
-#     ALLOWOVERRIDE = auto()
-#     REQUIRE = auto()
-
 FILE_INCLUDE_HEADER = "# INCLUDED FROM"
 INCLUDE = "INCLUDE"
 
@@ -42,7 +20,16 @@ class Directive:
         self.parent = parent
 
     def __str__(self):
-        return self.directive
+        return f"{self.directive}: {self.directive_args}"
+
+    def depth(self):
+        x = 0
+        p = self.parent
+        while p != None:
+            x += 1
+            p = p.parent
+        return x
+
     
 def read_config(config_dir, server_config_file):
     config = path.join(config_dir, server_config_file)
@@ -75,16 +62,6 @@ def read_config(config_dir, server_config_file):
             print(f"Error reading config file: {config}.")
             return []
 
-                # elif line.strip().startswith('<'):
-                #     if line.strip().startswith('</'):
-                #         if tag_level < 1:
-                #             raise SyntaxError(f"Found close tag when none open ({config}).")
-                #         else:
-                #             tag_level -= 1
-                #             # Close the current directive
-                # else:
-                #     new_directive = Directive(config, line.strip(), new_directive)
-    
     return config_lines
 
 def parse_config(config_list):
@@ -108,13 +85,13 @@ def parse_config(config_list):
                 # This is a closing directive, it should match parent's directive
                 # Yo dawg....
                 parent = parent.parent
+                # Stop processing and move on
+                continue
             else:
                 # This is a new parent
                 d = Directive(from_file, line.strip("<>"), parent)
                 # Update reference to current parent
                 parent = d
-                # Stop processing and move on
-                #continue
         else:
             # Parse this line, and assign it to parent (if any)
             d = Directive(from_file, line, parent)
@@ -123,6 +100,12 @@ def parse_config(config_list):
         directives.append(d)
     
     return directives
+
+def print_config(directive_list):
+    # Decent, but loses <Foo> structure which would be useful for rebuilding.
+    # This can be achieved by using '\n'.join(read_config(...))
+    for d in directive_list:
+        print(f"{'  ' * d.depth()}{d.directive} {d.directive_args}")
 
 def main():
     # This script assumes the config is syntactically correct, though doesn't cover every single nuance (e.g. line-continuations with '\')
@@ -137,9 +120,9 @@ def main():
 
     lines = read_config(args.config_dir, args.server_config_file)
 
-    #print('\n'.join(lines))
-
     directives = parse_config(lines)
+
+    print_config(directives)
 
     return 0
 
